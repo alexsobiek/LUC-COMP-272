@@ -23,7 +23,7 @@ public class StackExercise {
         intStack.push(4);
         System.out.printf("Original: %s\n", intStack);
         System.out.printf("Smallest: %d\n", smallestInt(intStack));
-        System.out.printf("Reversed: %s\n", reverse(clone(intStack)));
+        System.out.printf("Reversed: %s\n", reverse(intStack));
         System.out.printf("Insertion: %s\n", insert(clone(intStack), 3, 100));
     }
 
@@ -45,6 +45,7 @@ public class StackExercise {
      * @return Reversed Stack
      */
     public <T> Stack<T> reverse(Stack<T> stack) {
+        stack = clone(stack);
         Queue<T> revQueue = new LinkedList<>();
         while(!stack.empty()) revQueue.add(stack.pop());
         Stack<T> reversed = new Stack<>();
