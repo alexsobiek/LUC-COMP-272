@@ -1,22 +1,31 @@
 package com.alexsobiek.luc.comp272.binarytree;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class BinaryTree<T extends Comparable<T>> {
     private BinaryNode<T> root;
-    private int length;
+    private int size;
 
     public BinaryTree() {
     }
 
     public BinaryTree(T value) {
         root = new BinaryNode<>(value);
-        length = 1;
+        size = 1;
+    }
+
+    protected BinaryTree(BinaryNode<T> root) {
+        this.root = root;
+        size = toList().size();
     }
 
     public void add(T value) {
         BinaryNode<T> node = new BinaryNode<>(value);
         if (root == null) {
             root = node;
-            length = 1;
+            size = 1;
         }
         else {
             BinaryNode<T> current = root;
@@ -45,6 +54,10 @@ public class BinaryTree<T extends Comparable<T>> {
         }
     }
 
+    public BinaryNode<T> root() {
+        return root;
+    }
+
     public BinaryNode<T> get(T value) {
         boolean contains = false;
         BinaryNode<T> node = new BinaryNode<>(value);
@@ -58,5 +71,32 @@ public class BinaryTree<T extends Comparable<T>> {
 
     public boolean contains(T value) {
         return get(value) != null;
+    }
+
+    public List<T> toList() {
+        ArrayList<T> list = new ArrayList<>();
+        constructListRecursive(list, root);
+        return list;
+    }
+
+    private void constructListRecursive(List<T> list, BinaryNode<T> node) {
+        if (node != null) {
+            if (node.left() != null) constructListRecursive(list, node.left());
+            list.add(node.value());
+            if (node.right() != null) constructListRecursive(list, node.right());
+        }
+    }
+
+    public String inOrder() {
+        return toList().stream().map(Object::toString).collect(Collectors.joining(" "));
+    }
+
+    public void replaceValue(T oldValue, T newValue) {
+        BinaryNode<T> node = get(oldValue);
+        if (node != null) node.value(newValue);
+    }
+
+    public int size() {
+        return size;
     }
 }
