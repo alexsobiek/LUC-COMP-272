@@ -18,9 +18,9 @@ public class BinarySearchMain {
         tree2.node.left.left = new Node(1);
         tree2.node.right.right = new Node(10);
 
-        System.out.println(tree.inOrder());
-        tree.deleteNode(tree.node, 3);
-        System.out.println(tree.inOrder());
+        System.out.println(tree2.inOrder());
+        tree2.deleteNode(tree2.node, 3);
+        System.out.println(tree2.inOrder());
 
 
         /* Additional test code

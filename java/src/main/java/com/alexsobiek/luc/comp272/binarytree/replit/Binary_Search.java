@@ -29,7 +29,7 @@ public class Binary_Search {
      * @param value Integer to insert
      */
     public void insert(int value) {
-        insert(node, value);
+        insert(this.node, value);
     }
 
     /**
@@ -42,7 +42,7 @@ public class Binary_Search {
     public Node insert(Node node, int value) {
         if (node == null) {
             node = new Node(value);
-            this.node = node;
+            if (this.node == null) this.node = node;
         } else {
             if (value < node.data) node.left = insert(node.left, value);
             else if (value > node.data) node.right = insert(node.right, value);
@@ -55,7 +55,7 @@ public class Binary_Search {
      *
      * @return Queue
      */
-    public Queue<Node> toQueue() {
+    public Queue<Integer> toQueue() {
         return toQueue(node);
     }
 
@@ -65,16 +65,16 @@ public class Binary_Search {
      * @param root Root node to start at
      * @return Queue
      */
-    public Queue<Node> toQueue(Node root) {
-        Queue<Node> out = new LinkedList<>();
+    public Queue<Integer> toQueue(Node root) {
+        Queue<Integer> out = new LinkedList<>();
         toQueueRecursive(out, root);
         return out;
     }
 
-    private void toQueueRecursive(Queue<Node> queue, Node node) {
+    private void toQueueRecursive(Queue<Integer> queue, Node node) {
         if (node != null) {
             if (node.left != null) toQueueRecursive(queue, node.left);
-            queue.add(node);
+            queue.add(node.data);
             if (node.right != null) toQueueRecursive(queue, node.right);
         }
     }
@@ -95,7 +95,7 @@ public class Binary_Search {
      * @return String
      */
     public String inOrder(Node node) {
-        return toQueue(node).stream().map(n -> n.data).map(Object::toString).collect(Collectors.joining(" "));
+        return toQueue(node).stream().map(Object::toString).collect(Collectors.joining(" "));
     }
 
     /**
@@ -105,8 +105,8 @@ public class Binary_Search {
      * @return Node containing smallest value
      */
     public Node minimumElement(Node node) {
-        if (node.left == null) return node;
-        else return minimumElement(node.left);
+        while (node.left != null) node = node.left;
+        return node;
     }
 
     /**
@@ -115,13 +115,19 @@ public class Binary_Search {
      * @param node  Node to delete value after
      * @param value Value to delete
      */
-    public void deleteNode(Node node, int value) {
-        Queue<Node> queue = toQueue(node);
-        this.node = null;
-        queue.forEach(n -> {
-            if (n.data != value) {
-                insert(n.data);
+    public Node deleteNode(Node node, int value) {
+        if (node != null) {
+            if (value < node.data) node.left = deleteNode(node.left, value);
+            else if (value > node.data) node.right = deleteNode(node.right, value);
+            else {
+                if (node.left == null) node = node.right;
+                else if (node.right == null) node = node.left;
+                else {
+                    node.data = minimumElement(node.right).data;
+                    node.right = deleteNode(node.right, node.data);
+                }
             }
-        });
+        }
+        return node;
     }
 }
