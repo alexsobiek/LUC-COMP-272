@@ -30,6 +30,14 @@ public class HashingMain {
 
     public ArrayList<String> even(HashMap<Integer, String> hashmap) {
         return hashmap.entrySet().stream().filter(s -> s.getKey() % 2 == 0).map(Map.Entry::getValue).sorted().collect(Collectors.toCollection(ArrayList::new));
+
+        /* Non Java Stream version:
+        ArrayList<String> evens = new ArrayList<>();
+        for (Map.Entry<Integer, String> entry : hashmap.entrySet()) {
+            if (entry.getKey() % 2 == 0) evens.add(entry.getValue());
+        }
+        return evens;
+        */
     }
 
     public double average(HashMap<Integer, Integer> hashmap) {
@@ -38,7 +46,7 @@ public class HashingMain {
         /* Non Java Stream version:
         int sum = 0;
         for (int i : hashmap.values()) sum += i;
-        return sum / hashmap.size();
-         */
+        return (double) sum / hashmap.size();
+        */
     }
 }
