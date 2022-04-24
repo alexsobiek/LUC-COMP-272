@@ -5,9 +5,13 @@ import java.util.concurrent.CompletableFuture;
 public class GraphingTest {
     public static void main(String[] args) {
         GraphingTest test = new GraphingTest();
+        long start = System.currentTimeMillis();
         test.testGraph(test.graphA(), "A").thenRun(() -> {
             test.testGraph(test.graphB(), "B").thenRun(() -> {
-                test.testGraph(test.graphC(), "C");
+                test.testGraph(test.graphC(), "C").thenRun(() -> {
+                    long end = System.currentTimeMillis();
+                    System.out.printf("\nTest completed in %dms\n", end - start);
+                });
             });
         });
     }
