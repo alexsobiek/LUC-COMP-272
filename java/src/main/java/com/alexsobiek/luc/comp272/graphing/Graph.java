@@ -1,90 +1,108 @@
 package com.alexsobiek.luc.comp272.graphing;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
-public class Graph {
-    int numVertices;
-    LinkedList<Integer>[] adjListArr;
+public class Graph<T> {
+    private final HashMap<T, List<T>> edges;
 
-    public Graph(int numV) {
-        numVertices = numV;
-        adjListArr = new LinkedList[numVertices];
-
-        for (int i = 0; i < numVertices; i++) {
-            adjListArr[i] = new LinkedList<>();
-        }
+    public Graph() {
+        edges = new HashMap<>();
     }
 
-    public void addEdge(Graph graph, int src, int dest) {
-        adjListArr[src].add(dest);
+    public void addEdge(T source, T destination) {
+        if (edges.containsKey(source)) edges.get(source).add(destination);
+        else edges.put(source, new ArrayList<>(List.of(destination)));
     }
 
-    public void printGraph(Graph graph) {
-        for (int i = 0; i < numVertices; i++) {
-            System.out.println("Adjaceny list of vertex: " + i);
-            System.out.print("Head");
-            for (Integer edge : adjListArr[i]) {
-                System.out.print(" -> " + edge);
-            }
-            System.out.println();
-        }
+    public void DFS(T source, BiConsumer<Boolean, GraphConsumerTask<T>> consumer) {
+        List<T> discovered = new ArrayList<>();
+        DFS(source, discovered, consumer);
     }
 
-    public void BFS(int src) {
-        boolean[] visited = new boolean[numVertices];
-        Queue<Integer> queue = new LinkedList<>();
+    public void DFS(T source, List<T> discovered, BiConsumer<Boolean, GraphConsumerTask<T>> consumer) {
+        if (edges.containsKey(source)) {
+            edges.get(source).forEach(e -> {
+                GraphConsumerTask<T> future = new GraphConsumerTask<>(e);
+                if (!discovered.contains(e)) {
+                    consumer.accept(false, future);
+                    if (!future.isExited()) {
+                        discovered.add(e);
+                        DFS(e, discovered, consumer);
+                    }
+                } else consumer.accept(true, future);
+            });
+        } else consumer.accept(false, new GraphConsumerTask<>(source));
+    }
 
-        visited[src] = true;
-        queue.add(src);
+    public <E> CompletableFuture<E> completeAsync(Consumer<CompletableFuture<E>> consumer) {
+        CompletableFuture<E> future = new CompletableFuture<>();
+        new Thread(() -> consumer.accept(future)).start();
+        return future;
+    }
 
-        while (queue.size() > 0) {
-            src = queue.poll();
-            System.out.print(src + " ");
-            Iterator<Integer> itr = adjListArr[src].listIterator();
-
-            while (itr.hasNext()) {
-                int n = itr.next();
-                if (!visited[n]) {
-                    visited[n] = true;
-                    queue.add(n);
+    public CompletableFuture<Boolean> hasPathDFS(T source, T destination) {
+        return completeAsync(future -> {
+            DFS(source, (visited, task) -> {
+                if (!visited && task.getValue().equals(destination)) {
+                    future.complete(true);
+                    task.exit(); // We don't need to continue going through the graph, exit
                 }
-            }
-        }
-        System.out.println();
+            });
+            if (!future.isDone()) future.complete(false);
+        });
     }
 
-
-
-    public List<Integer> vertices(int index) {
-        boolean[] visited = new boolean[numVertices];
-        List<Integer> vertices = new ArrayList<>();
-        vertices(index, vertices, visited);
-        return vertices;
+    public CompletableFuture<Boolean> hasCycle(T source) {
+        return completeAsync(future -> {
+            DFS(source, (visited, task) -> {
+                if (visited) {
+                    future.complete(true);
+                    task.exit();
+                }
+            });
+            if (!future.isDone()) future.complete(false);
+        });
     }
 
-    public void vertices(int index, List<Integer> vertices, boolean[] visited) {
-        visited[index] = true;
-        vertices.add(index);
-        for (int n : adjListArr[index]) if (!visited[n]) vertices(n, vertices, visited);
+    public CompletableFuture<Optional<T>> findRoot(T source) {
+        return completeAsync(future -> {
+            List<T> discovered = new ArrayList<>();
+            edges.forEach((s, e) -> {
+                DFS(s, (visited, task) -> {
+                    T val = task.getValue();
+                    if (!discovered.contains(val)) {
+                        discovered.add(val);
+                    }
+                });
+            });
+            future.complete(edges.keySet().stream().filter(e -> !discovered.contains(e)).findFirst());
+        });
+    }
+}
+
+class GraphConsumerTask<T> {
+    T value;
+    boolean exit;
+
+    public GraphConsumerTask(T value) {
+        this.value = value;
     }
 
-    public double average(int index) {
-        double total = 0;
-        List<Integer> vertices = vertices(index);
-        for (int i : vertices) total += i;
-        return total / vertices.size();
+    public void exit() {
+        exit = true;
     }
 
-
-    public int getNumVertices() {
-        return numVertices;
+    public boolean isExited() {
+        return exit;
     }
 
-    public LinkedList<Integer>[] getAdjListArr() {
-        return adjListArr;
-    }
-
-    public Iterator<BFSGraphEntry> iterator(int src) {
-        return new BFSGraphIterator(this, src);
+    public T getValue() {
+        return value;
     }
 }
