@@ -72,16 +72,18 @@ public class Graph<T> {
 
     public CompletableFuture<Optional<T>> findRoot(T source) {
         return completeAsync(future -> {
-            List<T> discovered = new ArrayList<>();
-            edges.keySet().parallelStream().forEach(s -> {
-                DFS(s, (visited, task) -> {
-                    T val = task.getValue();
-                    if (!discovered.contains(val)) {
-                        discovered.add(val);
-                    }
+            if (edges.containsKey(source)) {
+                List<T> discovered = new ArrayList<>();
+                edges.get(source).parallelStream().forEach(s -> {
+                    DFS(s, (visited, task) -> {
+                        T val = task.getValue();
+                        if (!discovered.contains(val)) {
+                            discovered.add(val);
+                        }
+                    });
                 });
-            });
-            future.complete(edges.keySet().stream().filter(e -> !discovered.contains(e)).findFirst());
+                future.complete(edges.keySet().stream().filter(e -> !discovered.contains(e)).findFirst());
+            } else future.complete(Optional.empty());
         });
     }
 }
