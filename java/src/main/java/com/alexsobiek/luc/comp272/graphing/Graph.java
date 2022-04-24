@@ -27,7 +27,7 @@ public class Graph<T> {
 
     public void DFS(T source, List<T> discovered, BiConsumer<Boolean, GraphConsumerTask<T>> consumer) {
         if (edges.containsKey(source)) {
-            edges.get(source).forEach(e -> {
+            edges.get(source).parallelStream().forEach(e -> {
                 GraphConsumerTask<T> future = new GraphConsumerTask<>(e);
                 if (!discovered.contains(e)) {
                     consumer.accept(false, future);
@@ -73,7 +73,7 @@ public class Graph<T> {
     public CompletableFuture<Optional<T>> findRoot(T source) {
         return completeAsync(future -> {
             List<T> discovered = new ArrayList<>();
-            edges.forEach((s, e) -> {
+            edges.keySet().parallelStream().forEach(s -> {
                 DFS(s, (visited, task) -> {
                     T val = task.getValue();
                     if (!discovered.contains(val)) {
